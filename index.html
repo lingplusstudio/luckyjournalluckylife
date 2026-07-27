@@ -71,7 +71,7 @@
         .user-avatar, .user-avatar-placeholder { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--gold-light); object-fit: cover; }
         .logout-btn { font-size: 12px; color: var(--text-muted); background: none; border: 1px solid var(--border); border-radius: 6px; padding: 5px 12px; cursor: pointer; }
 
-        .main { max-width: 640px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+        .main { max-width: 640px; margin: 0 auto; padding: 2rem 1.25rem 4rem; transition: max-width 0.2s; }
 
         /* ── STATS & STREAK ── */
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.5rem; }
@@ -97,6 +97,11 @@
         .star-btn.active { color: var(--gold-mid); }
         .submit-btn { background: var(--text-primary); color: var(--bg); border: none; border-radius: var(--radius-md); padding: 9px 22px; font-size: 13px; cursor: pointer; }
 
+        /* ── VIEW TOGGLE ── */
+        .view-toggle { display: flex; gap: 8px; margin-bottom: 1.25rem; }
+        .view-btn { font-size: 12px; padding: 6px 18px; border-radius: 20px; border: 1px solid var(--border); background: transparent; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+        .view-btn.active { background: var(--text-primary); color: var(--bg); border-color: var(--text-primary); }
+
         /* ── FILTER ── */
         .filter-row { display: flex; gap: 8px; margin-bottom: 1.25rem; }
         .filter-chip { font-size: 12px; padding: 5px 16px; border-radius: 20px; border: 1px solid var(--border); background: transparent; cursor: pointer; }
@@ -115,6 +120,33 @@
         .entry-delete { position: absolute; top: 10px; right: 10px; border: none; background: none; color: var(--text-muted); padding: 5px; cursor: pointer; opacity: 0; }
         .entry-card:hover .entry-delete { opacity: 1; }
 
+        /* ── CALENDAR VIEW ── */
+        .calendar-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1.5rem; box-shadow: var(--shadow-sm); }
+        .calendar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.9rem; }
+        .cal-nav-btn { background: none; border: 1px solid var(--border); border-radius: 8px; width: 30px; height: 30px; cursor: pointer; font-size: 15px; color: var(--text-secondary); }
+        .cal-nav-btn:hover { border-color: var(--gold-mid); color: var(--gold-mid); }
+        .calendar-month-label { font-family: 'Noto Serif TC', serif; font-size: 16px; letter-spacing: 0.06em; }
+        .calendar-summary { font-size: 11px; color: var(--text-muted); text-align: center; margin-bottom: 0.9rem; letter-spacing: 0.03em; }
+
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+        .cal-weekday { text-align: center; font-size: 11px; color: var(--text-muted); padding-bottom: 4px; }
+        .cal-day {
+            aspect-ratio: 1; border-radius: 10px; border: 1px solid var(--border); background: var(--bg);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer; position: relative; font-size: 12.5px; transition: all 0.15s; gap: 2px;
+        }
+        .cal-day:hover { border-color: var(--gold-mid); }
+        .cal-day.empty { visibility: hidden; cursor: default; }
+        .cal-day.has-entry { background: var(--gold-light); border-color: var(--gold-mid); font-weight: 500; }
+        .cal-day.today { box-shadow: 0 0 0 2px var(--gold-mid) inset; }
+        .cal-day.selected { background: var(--text-primary); border-color: var(--text-primary); color: var(--bg); }
+        .cal-day-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--gold-mid); }
+        .cal-day.selected .cal-day-dot { background: var(--bg); }
+
+        .day-entries-section { margin-top: 1.5rem; }
+        .day-entries-title { font-size: 11px; color: var(--text-muted); margin-bottom: 0.7rem; letter-spacing: 0.04em; }
+        .day-entries-empty { text-align: center; padding: 2rem 1rem; color: var(--text-muted); font-size: 13px; }
+
         /* ── MODAL ── */
         .modal-overlay { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
@@ -129,6 +161,28 @@
 
         .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--text-primary); color: var(--bg); padding: 11px 24px; border-radius: var(--radius-md); font-size: 13px; transition: transform 0.3s; z-index: 2000; }
         .toast.show { transform: translateX(-50%) translateY(0); }
+
+        /* ── DESKTOP: 橫向展開 ── */
+        @media (min-width: 900px) {
+            .main { max-width: 1080px; padding: 2.5rem 2rem 5rem; }
+            .stats-grid { gap: 16px; }
+            .stat-card { padding: 1.25rem; }
+            .stat-num { font-size: 30px; }
+
+            /* 列表模式：雙欄排列 entries，讓橫向空間更有效利用 */
+            #entriesContainer, .day-entries-list {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+                align-items: start;
+            }
+            #entriesContainer .entry-card, .day-entries-list .entry-card { margin-bottom: 0; }
+
+            /* 日曆模式：日曆置左、當日紀錄置右，並排顯示 */
+            .calendar-layout { display: grid; grid-template-columns: 380px 1fr; gap: 1.5rem; align-items: start; }
+            .day-entries-section { margin-top: 0; }
+            .cal-day { font-size: 13px; }
+        }
     </style>
 </head>
 <body>
@@ -178,13 +232,36 @@
             </div>
         </div>
 
-        <div class="filter-row">
-            <button class="filter-chip active" onclick="setFilter('all',this)">全部</button>
-            <button class="filter-chip" onclick="setFilter('today',this)">今天</button>
-            <button class="filter-chip" onclick="setFilter('month',this)">本月</button>
+        <div class="view-toggle">
+            <button class="view-btn active" id="viewBtnList" onclick="setView('list', this)">📋 全覽模式</button>
+            <button class="view-btn" id="viewBtnCalendar" onclick="setView('calendar', this)">📅 日曆模式</button>
         </div>
 
-        <div id="entriesContainer"></div>
+        <!-- ── 全覽模式 ── -->
+        <div id="listView">
+            <div class="filter-row">
+                <button class="filter-chip active" onclick="setFilter('all',this)">全部</button>
+                <button class="filter-chip" onclick="setFilter('today',this)">今天</button>
+                <button class="filter-chip" onclick="setFilter('month',this)">本月</button>
+            </div>
+            <div id="entriesContainer"></div>
+        </div>
+
+        <!-- ── 日曆模式 ── -->
+        <div id="calendarView" style="display:none;">
+            <div class="calendar-layout">
+                <div class="calendar-card">
+                    <div class="calendar-header">
+                        <button class="cal-nav-btn" onclick="changeMonth(-1)">‹</button>
+                        <span class="calendar-month-label" id="calendarMonthLabel"></span>
+                        <button class="cal-nav-btn" onclick="changeMonth(1)">›</button>
+                    </div>
+                    <div class="calendar-summary" id="calendarSummary"></div>
+                    <div class="calendar-grid" id="calendarGrid"></div>
+                </div>
+                <div class="day-entries-section" id="calendarDayEntries"></div>
+            </div>
+        </div>
     </main>
 </div>
 
@@ -233,6 +310,13 @@ let currentFilter = 'all';
 let currentStars = 1;
 let editingId = null;
 let editStars = 1;
+
+// ── View state ──
+let currentView = 'list';
+const _now = new Date();
+let calYear = _now.getFullYear();
+let calMonth = _now.getMonth(); // 0-indexed
+let selectedDate = null; // 'YYYY-MM-DD'
 
 // ── Auth Logic ──
 onAuthStateChanged(auth, user => {
@@ -308,7 +392,17 @@ window.saveEdit = async () => {
     showToast('更新成功 ✦');
 };
 
-// ── Render ──
+// ── View Toggle ──
+window.setView = (v, el) => {
+    currentView = v;
+    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('listView').style.display = v === 'list' ? 'block' : 'none';
+    document.getElementById('calendarView').style.display = v === 'calendar' ? 'block' : 'none';
+    if (v === 'calendar') renderCalendar();
+};
+
+// ── Render (List) ──
 function render() {
     const filtered = allEntries.filter(e => {
         const d = e.createdAt?.toDate?.() || new Date();
@@ -324,7 +418,6 @@ function render() {
     } else {
         container.innerHTML = filtered.map(e => {
             const d = e.createdAt?.toDate?.() || new Date();
-            // 改為 YYYY/MM/DD
             const dateStr = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
             const starStr = '⭐'.repeat(e.stars || 1);
             return `
@@ -339,6 +432,7 @@ function render() {
         }).join('');
     }
     updateStats();
+    if (currentView === 'calendar') renderCalendar();
 }
 
 function updateStats() {
@@ -346,7 +440,14 @@ function updateStats() {
     // 簡單的天數計算
     const days = new Set(allEntries.map(e => (e.createdAt?.toDate?.() || new Date()).toDateString()));
     document.getElementById('statStreak').textContent = days.size;
-    
+
+    const now = new Date();
+    const monthCount = allEntries.filter(e => {
+        const d = e.createdAt?.toDate?.() || new Date();
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    }).length;
+    document.getElementById('statMonth').textContent = monthCount;
+
     // Streak dots
     const dots = [];
     for(let i=13; i>=0; i--) {
@@ -356,6 +457,91 @@ function updateStats() {
     }
     document.getElementById('streakDots').innerHTML = dots.join('');
     document.getElementById('streakDaysText').textContent = `${days.size} 天`;
+}
+
+// ── Calendar View ──
+function dateKey(d) {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+window.changeMonth = (delta) => {
+    calMonth += delta;
+    if (calMonth < 0) { calMonth = 11; calYear--; }
+    if (calMonth > 11) { calMonth = 0; calYear++; }
+    selectedDate = null;
+    renderCalendar();
+};
+
+function renderCalendar() {
+    document.getElementById('calendarMonthLabel').textContent = `${calYear} 年 ${calMonth + 1} 月`;
+
+    // 依日期分組
+    const map = {};
+    allEntries.forEach(e => {
+        const d = e.createdAt?.toDate?.() || new Date();
+        const key = dateKey(d);
+        if (!map[key]) map[key] = [];
+        map[key].push(e);
+    });
+
+    const firstDayWeekday = new Date(calYear, calMonth, 1).getDay();
+    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+    const todayKey = dateKey(new Date());
+    const monthPrefix = `${calYear}-${String(calMonth + 1).padStart(2, '0')}`;
+
+    let html = ['日','一','二','三','四','五','六'].map(w => `<div class="cal-weekday">${w}</div>`).join('');
+    for (let i = 0; i < firstDayWeekday; i++) html += `<div class="cal-day empty"></div>`;
+
+    let recordedDays = 0;
+    for (let d = 1; d <= daysInMonth; d++) {
+        const key = `${monthPrefix}-${String(d).padStart(2, '0')}`;
+        const hasEntry = !!map[key];
+        if (hasEntry) recordedDays++;
+        let cls = 'cal-day';
+        if (hasEntry) cls += ' has-entry';
+        if (key === todayKey) cls += ' today';
+        if (key === selectedDate) cls += ' selected';
+        html += `<div class="${cls}" onclick="selectCalDay('${key}')">
+            <span>${d}</span>
+            ${hasEntry ? `<span class="cal-day-dot"></span>` : ''}
+        </div>`;
+    }
+
+    document.getElementById('calendarGrid').innerHTML = html;
+    document.getElementById('calendarSummary').textContent = `本月已記錄 ${recordedDays} / ${daysInMonth} 天`;
+    renderSelectedDayEntries(map);
+}
+
+window.selectCalDay = (key) => {
+    selectedDate = (selectedDate === key) ? null : key;
+    renderCalendar();
+};
+
+function renderSelectedDayEntries(map) {
+    const container = document.getElementById('calendarDayEntries');
+    if (!selectedDate) {
+        container.innerHTML = `<div class="day-entries-empty">點選左側日期，查看當天的幸運紀錄 ✦</div>`;
+        return;
+    }
+    const [y, m, d] = selectedDate.split('-');
+    const entries = map[selectedDate] || [];
+    if (!entries.length) {
+        container.innerHTML = `<div class="day-entries-title">${y}/${m}/${d}</div><div class="day-entries-empty">這天還沒有紀錄</div>`;
+        return;
+    }
+    const list = entries.map(e => {
+        const starStr = '⭐'.repeat(e.stars || 1);
+        return `
+        <div class="entry-card" onclick="openEditModal('${e.id}')">
+            <button class="entry-delete" onclick="deleteEntry(event, '${e.id}')">✕</button>
+            <div class="entry-header">
+                <span class="entry-date">${y}/${m}/${d}</span>
+                <span class="entry-stars">${starStr}</span>
+            </div>
+            <div class="entry-text">${e.text}</div>
+        </div>`;
+    }).join('');
+    container.innerHTML = `<div class="day-entries-title">${y}/${m}/${d} · 共 ${entries.length} 則</div><div class="day-entries-list">${list}</div>`;
 }
 
 // ── Stars UI ──
