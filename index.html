@@ -97,6 +97,19 @@
         .star-btn.active { color: var(--gold-mid); }
         .submit-btn { background: var(--text-primary); color: var(--bg); border: none; border-radius: var(--radius-md); padding: 9px 22px; font-size: 13px; cursor: pointer; }
 
+        /* ── SEARCH ── */
+        .search-box {
+            display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius-md); padding: 9px 14px; margin-bottom: 1.25rem; transition: border-color 0.2s;
+        }
+        .search-box:focus-within { border-color: var(--gold-mid); }
+        .search-icon { font-size: 13px; color: var(--text-muted); flex-shrink: 0; }
+        .search-box input { flex: 1; border: none; outline: none; background: transparent; font-size: 13.5px; font-family: 'Zen Kaku Gothic New', sans-serif; }
+        .search-box input::placeholder { color: var(--text-muted); }
+        .search-clear { display: none; align-items: center; justify-content: center; border: none; background: var(--border); color: var(--text-secondary); width: 20px; height: 20px; border-radius: 50%; cursor: pointer; font-size: 11px; flex-shrink: 0; }
+        .search-clear:hover { background: var(--border-hover); }
+        mark { background: var(--gold-light); color: inherit; border-radius: 3px; padding: 0 2px; }
+
         /* ── VIEW TOGGLE ── */
         .view-toggle { display: flex; gap: 8px; margin-bottom: 1.25rem; }
         .view-btn { font-size: 12px; padding: 6px 18px; border-radius: 20px; border: 1px solid var(--border); background: transparent; cursor: pointer; display: flex; align-items: center; gap: 5px; }
@@ -232,6 +245,12 @@
             </div>
         </div>
 
+        <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchInput" placeholder="搜尋關鍵字...（例如：貓咪、下雨、朋友）" oninput="setSearch(this.value)">
+            <button class="search-clear" id="searchClearBtn" onclick="clearSearch()">✕</button>
+        </div>
+
         <div class="view-toggle">
             <button class="view-btn active" id="viewBtnList" onclick="setView('list', this)">📋 全覽模式</button>
             <button class="view-btn" id="viewBtnCalendar" onclick="setView('calendar', this)">📅 日曆模式</button>
@@ -317,6 +336,7 @@ const _now = new Date();
 let calYear = _now.getFullYear();
 let calMonth = _now.getMonth(); // 0-indexed
 let selectedDate = null; // 'YYYY-MM-DD'
+let searchQuery = '';
 
 // ── Auth Logic ──
 onAuthStateChanged(auth, user => {
@@ -402,11 +422,39 @@ window.setView = (v, el) => {
     if (v === 'calendar') renderCalendar();
 };
 
+// ── Search ──
+window.setSearch = (v) => {
+    searchQuery = v.trim();
+    document.getElementById('searchClearBtn').style.display = searchQuery ? 'flex' : 'none';
+    render();
+};
+
+window.clearSearch = () => {
+    searchQuery = '';
+    document.getElementById('searchInput').value = '';
+    document.getElementById('searchClearBtn').style.display = 'none';
+    render();
+};
+
+function escapeRegExp(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+function highlightText(text, q) {
+    if (!q) return text;
+    const re = new RegExp(`(${escapeRegExp(q)})`, 'gi');
+    return text.replace(re, '<mark>$1</mark>');
+}
+
+function matchesSearch(e) {
+    if (!searchQuery) return true;
+    return (e.text || '').toLowerCase().includes(searchQuery.toLowerCase());
+}
+
 // ── Render (List) ──
 function render() {
     const filtered = allEntries.filter(e => {
         const d = e.createdAt?.toDate?.() || new Date();
         const now = new Date();
+        if (!matchesSearch(e)) return false;
         if (currentFilter === 'today') return d.toDateString() === now.toDateString();
         if (currentFilter === 'month') return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
         return true;
@@ -414,7 +462,8 @@ function render() {
 
     const container = document.getElementById('entriesContainer');
     if (!filtered.length) {
-        container.innerHTML = `<div style="text-align:center; padding: 3rem; color: #A8A89A;">尚無幸運紀錄</div>`;
+        const msg = searchQuery ? `找不到包含「${searchQuery}」的紀錄` : '尚無幸運紀錄';
+        container.innerHTML = `<div style="text-align:center; padding: 3rem; color: #A8A89A;">${msg}</div>`;
     } else {
         container.innerHTML = filtered.map(e => {
             const d = e.createdAt?.toDate?.() || new Date();
@@ -427,7 +476,7 @@ function render() {
                     <span class="entry-date">${dateStr}</span>
                     <span class="entry-stars">${starStr}</span>
                 </div>
-                <div class="entry-text">${e.text}</div>
+                <div class="entry-text">${highlightText(e.text, searchQuery)}</div>
             </div>`;
         }).join('');
     }
@@ -475,9 +524,10 @@ window.changeMonth = (delta) => {
 function renderCalendar() {
     document.getElementById('calendarMonthLabel').textContent = `${calYear} 年 ${calMonth + 1} 月`;
 
-    // 依日期分組
+    // 依日期分組（若有搜尋關鍵字，只納入符合的紀錄）
     const map = {};
     allEntries.forEach(e => {
+        if (!matchesSearch(e)) return;
         const d = e.createdAt?.toDate?.() || new Date();
         const key = dateKey(d);
         if (!map[key]) map[key] = [];
@@ -508,7 +558,10 @@ function renderCalendar() {
     }
 
     document.getElementById('calendarGrid').innerHTML = html;
-    document.getElementById('calendarSummary').textContent = `本月已記錄 ${recordedDays} / ${daysInMonth} 天`;
+    const summaryText = searchQuery
+        ? `包含「${searchQuery}」：本月 ${recordedDays} 天`
+        : `本月已記錄 ${recordedDays} / ${daysInMonth} 天`;
+    document.getElementById('calendarSummary').textContent = summaryText;
     renderSelectedDayEntries(map);
 }
 
@@ -538,7 +591,7 @@ function renderSelectedDayEntries(map) {
                 <span class="entry-date">${y}/${m}/${d}</span>
                 <span class="entry-stars">${starStr}</span>
             </div>
-            <div class="entry-text">${e.text}</div>
+            <div class="entry-text">${highlightText(e.text, searchQuery)}</div>
         </div>`;
     }).join('');
     container.innerHTML = `<div class="day-entries-title">${y}/${m}/${d} · 共 ${entries.length} 則</div><div class="day-entries-list">${list}</div>`;
