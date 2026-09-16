@@ -180,7 +180,7 @@
         .main-tab { flex: 1; text-align: center; font-size: 13px; padding: 9px 12px; border-radius: 999px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; transition: all 0.2s; font-family: inherit; }
         .main-tab.active { background: var(--text-primary); color: var(--bg); }
 
-        /* ── CATEGORIES (謝謝日記) ── */
+        /* ── CATEGORIES (用感謝的心向宇宙下訂單) ── */
         .category-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1.25rem; }
         .category-chip { font-size: 12px; padding: 5px 16px; border-radius: 20px; border: 1px solid var(--border); background: transparent; cursor: pointer; color: var(--text-secondary); }
         .category-chip.active { background: var(--text-primary); color: var(--bg); border-color: var(--text-primary); }
@@ -242,7 +242,7 @@
     <main class="main">
         <div class="main-tabs">
             <button class="main-tab active" id="tabBtnLucky" onclick="setMainTab('lucky', this)">✦ 幸運日記</button>
-            <button class="main-tab" id="tabBtnThanks" onclick="setMainTab('thanks', this)">🙏 謝謝日記</button>
+            <button class="main-tab" id="tabBtnThanks" onclick="setMainTab('thanks', this)">🙏 用感謝的心向宇宙下訂單</button>
         </div>
 
         <div id="luckyPage">
@@ -311,7 +311,7 @@
         </div>
         <!-- /#luckyPage -->
 
-        <!-- ══════════════ 謝謝日記 ══════════════ -->
+        <!-- ══════════════ 用感謝的心向宇宙下訂單 ══════════════ -->
         <div id="thanksPage" style="display:none;">
             <div class="stats-grid">
                 <div class="stat-card"><span class="stat-num" id="thanksStatTotal">—</span><span class="stat-lbl">總篇數</span></div>
@@ -385,7 +385,7 @@
     </div>
 </div>
 
-<!-- Edit Modal (謝謝日記) -->
+<!-- Edit Modal (用感謝的心向宇宙下訂單) -->
 <div class="modal-overlay" id="editThanksModal">
     <div class="modal-content">
         <span class="modal-close" onclick="closeEditThanksModal()">✕</span>
@@ -433,10 +433,10 @@ let calMonth = _now.getMonth(); // 0-indexed
 let selectedDate = null; // 'YYYY-MM-DD'
 let searchQuery = '';
 
-// ── Main tab (幸運日記 / 謝謝日記) ──
+// ── Main tab (幸運日記 / 用感謝的心向宇宙下訂單) ──
 let currentMainTab = 'lucky';
 
-// ── 謝謝日記 state ──
+// ── 用感謝的心向宇宙下訂單 state ──
 let thanksEntries = [];
 let thanksCategories = ['AMY', 'MOLA', 'GARY', '物質的', '心靈的']; // 預設分類，會與 Firestore 同步
 let currentThanksCategoryFilter = 'all';
@@ -763,7 +763,7 @@ function showToast(m) {
 }
 
 /* ══════════════════════════════════════════════
-   謝謝日記 (Thanks Journal)
+   用感謝的心向宇宙下訂單 (Thanks Journal)
    ══════════════════════════════════════════════ */
 
 // ── 分類：與 Firestore 同步 ──
