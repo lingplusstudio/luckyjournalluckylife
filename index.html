@@ -175,6 +175,27 @@
         .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--text-primary); color: var(--bg); padding: 11px 24px; border-radius: var(--radius-md); font-size: 13px; transition: transform 0.3s; z-index: 2000; }
         .toast.show { transform: translateX(-50%) translateY(0); }
 
+        /* ── MAIN TABS ── */
+        .main-tabs { display: flex; gap: 4px; padding: 4px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; margin: 0 auto 1.75rem; max-width: 320px; }
+        .main-tab { flex: 1; text-align: center; font-size: 13px; padding: 9px 12px; border-radius: 999px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; transition: all 0.2s; font-family: inherit; }
+        .main-tab.active { background: var(--text-primary); color: var(--bg); }
+
+        /* ── CATEGORIES (謝謝日記) ── */
+        .category-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1.25rem; }
+        .category-chip { font-size: 12px; padding: 5px 16px; border-radius: 20px; border: 1px solid var(--border); background: transparent; cursor: pointer; color: var(--text-secondary); }
+        .category-chip.active { background: var(--text-primary); color: var(--bg); border-color: var(--text-primary); }
+        .category-chip-add, .category-pick-add { font-size: 12px; padding: 5px 14px; border-radius: 20px; border: 1px dashed var(--border-hover); background: transparent; cursor: pointer; color: var(--text-muted); }
+        .category-chip-add:hover, .category-pick-add:hover { border-color: var(--gold-mid); color: var(--gold-mid); }
+
+        .category-picker { display: flex; flex-wrap: wrap; gap: 6px; }
+        .category-pick-btn { font-size: 11.5px; padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border); background: transparent; cursor: pointer; color: var(--text-secondary); transition: all 0.15s; }
+
+        .thanks-input-footer { margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid var(--border); }
+        .thanks-input-footer .category-picker { margin-bottom: 0.8rem; }
+        .thanks-submit-row { display: flex; justify-content: flex-end; }
+
+        .cat-badge { font-size: 10.5px; padding: 2px 10px; border-radius: 20px; color: #fff; white-space: nowrap; }
+
         /* ── DESKTOP: 橫向展開 ── */
         @media (min-width: 900px) {
             .main { max-width: 1080px; padding: 2.5rem 2rem 5rem; }
@@ -183,13 +204,13 @@
             .stat-num { font-size: 30px; }
 
             /* 列表模式：雙欄排列 entries，讓橫向空間更有效利用 */
-            #entriesContainer, .day-entries-list {
+            #entriesContainer, #thanksEntriesContainer, .day-entries-list {
                 display: grid;
                 grid-template-columns: repeat(2, 1fr);
                 gap: 12px;
                 align-items: start;
             }
-            #entriesContainer .entry-card, .day-entries-list .entry-card { margin-bottom: 0; }
+            #entriesContainer .entry-card, #thanksEntriesContainer .entry-card, .day-entries-list .entry-card { margin-bottom: 0; }
 
             /* 日曆模式：日曆置左、當日紀錄置右，並排顯示 */
             .calendar-layout { display: grid; grid-template-columns: 380px 1fr; gap: 1.5rem; align-items: start; }
@@ -219,6 +240,12 @@
     </header>
 
     <main class="main">
+        <div class="main-tabs">
+            <button class="main-tab active" id="tabBtnLucky" onclick="setMainTab('lucky', this)">✦ 幸運日記</button>
+            <button class="main-tab" id="tabBtnThanks" onclick="setMainTab('thanks', this)">🙏 謝謝日記</button>
+        </div>
+
+        <div id="luckyPage">
         <div class="stats-grid">
             <div class="stat-card"><span class="stat-num" id="statTotal">—</span><span class="stat-lbl">總幸運數</span></div>
             <div class="stat-card"><span class="stat-num" id="statStreak">—</span><span class="stat-lbl">連續天數</span></div>
@@ -281,6 +308,63 @@
                 <div class="day-entries-section" id="calendarDayEntries"></div>
             </div>
         </div>
+        </div>
+        <!-- /#luckyPage -->
+
+        <!-- ══════════════ 謝謝日記 ══════════════ -->
+        <div id="thanksPage" style="display:none;">
+            <div class="stats-grid">
+                <div class="stat-card"><span class="stat-num" id="thanksStatTotal">—</span><span class="stat-lbl">總篇數</span></div>
+                <div class="stat-card"><span class="stat-num" id="thanksStatStreak">—</span><span class="stat-lbl">記錄天數</span></div>
+                <div class="stat-card"><span class="stat-num" id="thanksStatMonth">—</span><span class="stat-lbl">本月篇數</span></div>
+            </div>
+
+            <div class="input-card">
+                <span class="input-label">今天想謝謝誰、謝謝什麼？</span>
+                <textarea id="thanksInput" placeholder="寫下心裡的感謝..." rows="3"></textarea>
+                <div class="thanks-input-footer">
+                    <div class="category-picker" id="thanksCategoryPicker"></div>
+                    <div class="thanks-submit-row">
+                        <button class="submit-btn" id="thanksSubmitBtn" onclick="addThanksEntry()">記下來 →</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="thanksSearchInput" placeholder="搜尋關鍵字..." oninput="setThanksSearch(this.value)">
+                <button class="search-clear" id="thanksSearchClearBtn" onclick="clearThanksSearch()">✕</button>
+            </div>
+
+            <div class="view-toggle">
+                <button class="view-btn active" id="thanksViewBtnList" onclick="setThanksView('list', this)">📋 全覽模式</button>
+                <button class="view-btn" id="thanksViewBtnCalendar" onclick="setThanksView('calendar', this)">📅 日曆模式</button>
+            </div>
+
+            <div class="category-row" id="thanksCategoryFilterRow"></div>
+
+            <!-- ── 全覽模式 ── -->
+            <div id="thanksListView">
+                <div id="thanksEntriesContainer"></div>
+            </div>
+
+            <!-- ── 日曆模式 ── -->
+            <div id="thanksCalendarView" style="display:none;">
+                <div class="calendar-layout">
+                    <div class="calendar-card">
+                        <div class="calendar-header">
+                            <button class="cal-nav-btn" onclick="changeThanksMonth(-1)">‹</button>
+                            <span class="calendar-month-label" id="thanksCalendarMonthLabel"></span>
+                            <button class="cal-nav-btn" onclick="changeThanksMonth(1)">›</button>
+                        </div>
+                        <div class="calendar-summary" id="thanksCalendarSummary"></div>
+                        <div class="calendar-grid" id="thanksCalendarGrid"></div>
+                    </div>
+                    <div class="day-entries-section" id="thanksCalendarDayEntries"></div>
+                </div>
+            </div>
+        </div>
+        <!-- /#thanksPage -->
     </main>
 </div>
 
@@ -301,12 +385,23 @@
     </div>
 </div>
 
+<!-- Edit Modal (謝謝日記) -->
+<div class="modal-overlay" id="editThanksModal">
+    <div class="modal-content">
+        <span class="modal-close" onclick="closeEditThanksModal()">✕</span>
+        <h3 style="margin-bottom: 1rem; font-weight: 400;">編輯這份感謝</h3>
+        <div class="category-picker" id="editThanksCategoryPicker" style="margin-bottom: 1rem;"></div>
+        <textarea id="editThanksInput" style="border: 1px solid var(--border); padding: 10px; border-radius: 8px; min-height: 150px;"></textarea>
+        <button class="submit-btn" style="width: 100%; margin-top: 1rem;" onclick="saveThanksEdit()">儲存變更</button>
+    </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut as fbSignOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-import { getFirestore, collection, addDoc, deleteDoc, updateDoc, doc, onSnapshot, query, orderBy, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import { getFirestore, collection, addDoc, deleteDoc, updateDoc, doc, onSnapshot, query, orderBy, serverTimestamp, setDoc, arrayUnion } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 // 🔧 請填入你的 Firebase Config
 const firebaseConfig = {
@@ -338,6 +433,29 @@ let calMonth = _now.getMonth(); // 0-indexed
 let selectedDate = null; // 'YYYY-MM-DD'
 let searchQuery = '';
 
+// ── Main tab (幸運日記 / 謝謝日記) ──
+let currentMainTab = 'lucky';
+
+// ── 謝謝日記 state ──
+let thanksEntries = [];
+let thanksCategories = ['AMY', 'MOLA', 'GARY', '物質的', '心靈的']; // 預設分類，會與 Firestore 同步
+let currentThanksCategoryFilter = 'all';
+let currentThanksCategory = thanksCategories[0]; // 新增紀錄時選中的分類
+let editingThanksId = null;
+let editThanksCategory = null;
+let thanksSearchQuery = '';
+let thanksView = 'list';
+let thanksCalYear = _now.getFullYear();
+let thanksCalMonth = _now.getMonth();
+let thanksSelectedDate = null;
+
+const CATEGORY_COLORS = ['#C9952A', '#8E7CC3', '#5B9BD5', '#68A67B', '#D97757', '#B15C6B', '#4E8098', '#9C7A46', '#C77DAB', '#7A8C5A'];
+function getCategoryColor(name) {
+    let hash = 0;
+    for (let i = 0; i < (name || '').length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    return CATEGORY_COLORS[Math.abs(hash) % CATEGORY_COLORS.length];
+}
+
 // ── Auth Logic ──
 onAuthStateChanged(auth, user => {
     if (user) {
@@ -346,6 +464,8 @@ onAuthStateChanged(auth, user => {
         document.getElementById('appScreen').style.display = 'block';
         updateAvatar(user);
         listenEntries();
+        listenThanksCategories();
+        listenThanksEntries();
     } else {
         document.getElementById('loginScreen').style.display = 'flex';
         document.getElementById('appScreen').style.display = 'none';
@@ -410,6 +530,16 @@ window.saveEdit = async () => {
     });
     closeEditModal();
     showToast('更新成功 ✦');
+};
+
+// ── Main Tab Toggle ──
+window.setMainTab = (tab, el) => {
+    currentMainTab = tab;
+    document.querySelectorAll('.main-tab').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('luckyPage').style.display = tab === 'lucky' ? 'block' : 'none';
+    document.getElementById('thanksPage').style.display = tab === 'thanks' ? 'block' : 'none';
+    if (tab === 'thanks' && thanksView === 'calendar') renderThanksCalendar();
 };
 
 // ── View Toggle ──
@@ -630,6 +760,301 @@ function showToast(m) {
     const t = document.getElementById('toast');
     t.textContent = m; t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+/* ══════════════════════════════════════════════
+   謝謝日記 (Thanks Journal)
+   ══════════════════════════════════════════════ */
+
+// ── 分類：與 Firestore 同步 ──
+function listenThanksCategories() {
+    const ref = doc(db, 'users', currentUser.uid, 'meta', 'thanksCategories');
+    onSnapshot(ref, snap => {
+        if (snap.exists() && Array.isArray(snap.data().list) && snap.data().list.length) {
+            thanksCategories = snap.data().list;
+        } else {
+            // 第一次使用，寫入預設分類
+            setDoc(ref, { list: thanksCategories }, { merge: true });
+        }
+        if (!thanksCategories.includes(currentThanksCategory)) currentThanksCategory = thanksCategories[0];
+        if (editingThanksId && !thanksCategories.includes(editThanksCategory)) editThanksCategory = thanksCategories[0];
+        renderThanksCategoryUI();
+        renderThanks();
+    });
+}
+
+window.addThanksCategory = async () => {
+    const name = prompt('新增分類名稱（例如：朋友、工作、健康）：');
+    if (name === null) return;
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    if (thanksCategories.includes(trimmed)) return showToast('這個分類已經存在囉');
+    const ref = doc(db, 'users', currentUser.uid, 'meta', 'thanksCategories');
+    await setDoc(ref, { list: arrayUnion(trimmed) }, { merge: true });
+    showToast(`已新增分類「${trimmed}」`);
+};
+
+function categoryPickerHtml(selectedCat, onClickFnName) {
+    const buttons = thanksCategories.map(cat => {
+        const active = cat === selectedCat;
+        const color = getCategoryColor(cat);
+        const style = active ? ` style="background:${color};border-color:${color};color:#fff;"` : '';
+        return `<button type="button" class="category-pick-btn${active ? ' active' : ''}"${style} onclick="${onClickFnName}('${cat.replace(/'/g, "\\'")}')">${cat}</button>`;
+    }).join('');
+    return buttons + `<button type="button" class="category-pick-add" onclick="addThanksCategory()">+ 新增</button>`;
+}
+
+function renderThanksCategoryUI() {
+    renderThanksCategoryFilterRow();
+    renderThanksCategoryPicker();
+}
+
+function renderThanksCategoryFilterRow() {
+    const row = document.getElementById('thanksCategoryFilterRow');
+    if (!row) return;
+    let html = `<button class="category-chip${currentThanksCategoryFilter === 'all' ? ' active' : ''}" onclick="setThanksCategoryFilter('all', this)">全部</button>`;
+    html += thanksCategories.map(cat =>
+        `<button class="category-chip${currentThanksCategoryFilter === cat ? ' active' : ''}" onclick="setThanksCategoryFilter('${cat.replace(/'/g, "\\'")}', this)">${cat}</button>`
+    ).join('');
+    html += `<button class="category-chip-add" onclick="addThanksCategory()">+ 新增分類</button>`;
+    row.innerHTML = html;
+}
+
+function renderThanksCategoryPicker() {
+    const el = document.getElementById('thanksCategoryPicker');
+    if (el) el.innerHTML = categoryPickerHtml(currentThanksCategory, 'selectThanksCategory');
+}
+
+function renderEditThanksCategoryPicker() {
+    const el = document.getElementById('editThanksCategoryPicker');
+    if (el) el.innerHTML = categoryPickerHtml(editThanksCategory, 'selectEditThanksCategory');
+}
+
+window.selectThanksCategory = (cat) => {
+    currentThanksCategory = cat;
+    renderThanksCategoryPicker();
+};
+
+window.selectEditThanksCategory = (cat) => {
+    editThanksCategory = cat;
+    renderEditThanksCategoryPicker();
+};
+
+window.setThanksCategoryFilter = (cat, el) => {
+    currentThanksCategoryFilter = cat;
+    document.querySelectorAll('#thanksCategoryFilterRow .category-chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    renderThanks();
+};
+
+// ── CRUD（存在 Firestore：users/{uid}/thanksEntries）──
+function listenThanksEntries() {
+    const q = query(collection(db, 'users', currentUser.uid, 'thanksEntries'), orderBy('createdAt', 'desc'));
+    onSnapshot(q, snap => {
+        thanksEntries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderThanks();
+    });
+}
+
+window.addThanksEntry = async () => {
+    const text = document.getElementById('thanksInput').value.trim();
+    if (!text) return showToast('寫點什麼吧 ✨');
+    if (!currentThanksCategory) return showToast('請先選擇一個分類');
+    await addDoc(collection(db, 'users', currentUser.uid, 'thanksEntries'), {
+        text, category: currentThanksCategory, createdAt: serverTimestamp()
+    });
+    document.getElementById('thanksInput').value = '';
+    showToast('已記下感謝 🙏');
+};
+
+window.deleteThanksEntry = async (e, id) => {
+    e.stopPropagation();
+    if (confirm('確定要刪除嗎？')) await deleteDoc(doc(db, 'users', currentUser.uid, 'thanksEntries', id));
+};
+
+window.openEditThanksModal = (id) => {
+    const entry = thanksEntries.find(e => e.id === id);
+    if (!entry) return;
+    editingThanksId = id;
+    editThanksCategory = entry.category || thanksCategories[0];
+    document.getElementById('editThanksInput').value = entry.text;
+    renderEditThanksCategoryPicker();
+    document.getElementById('editThanksModal').style.display = 'flex';
+};
+
+window.closeEditThanksModal = () => {
+    document.getElementById('editThanksModal').style.display = 'none';
+    editingThanksId = null;
+};
+
+window.saveThanksEdit = async () => {
+    const newText = document.getElementById('editThanksInput').value.trim();
+    if (!newText) return;
+    await updateDoc(doc(db, 'users', currentUser.uid, 'thanksEntries', editingThanksId), {
+        text: newText,
+        category: editThanksCategory
+    });
+    closeEditThanksModal();
+    showToast('更新成功 🙏');
+};
+
+// ── View Toggle（列表 / 日曆）──
+window.setThanksView = (v, el) => {
+    thanksView = v;
+    document.querySelectorAll('#thanksPage .view-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('thanksListView').style.display = v === 'list' ? 'block' : 'none';
+    document.getElementById('thanksCalendarView').style.display = v === 'calendar' ? 'block' : 'none';
+    if (v === 'calendar') renderThanksCalendar();
+};
+
+// ── Search ──
+window.setThanksSearch = (v) => {
+    thanksSearchQuery = v.trim();
+    document.getElementById('thanksSearchClearBtn').style.display = thanksSearchQuery ? 'flex' : 'none';
+    renderThanks();
+};
+
+window.clearThanksSearch = () => {
+    thanksSearchQuery = '';
+    document.getElementById('thanksSearchInput').value = '';
+    document.getElementById('thanksSearchClearBtn').style.display = 'none';
+    renderThanks();
+};
+
+function matchesThanksSearch(e) {
+    if (!thanksSearchQuery) return true;
+    return (e.text || '').toLowerCase().includes(thanksSearchQuery.toLowerCase());
+}
+
+function matchesThanksCategoryFilter(e) {
+    if (currentThanksCategoryFilter === 'all') return true;
+    return e.category === currentThanksCategoryFilter;
+}
+
+// ── Render (List) ──
+function thanksEntryCardHtml(e) {
+    const d = e.createdAt?.toDate?.() || new Date();
+    const dateStr = `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
+    const color = getCategoryColor(e.category || '');
+    return `
+    <div class="entry-card" onclick="openEditThanksModal('${e.id}')">
+        <button class="entry-delete" onclick="deleteThanksEntry(event, '${e.id}')">✕</button>
+        <div class="entry-header">
+            <span class="entry-date">${dateStr}</span>
+            <span class="cat-badge" style="background:${color};">${e.category || ''}</span>
+        </div>
+        <div class="entry-text">${highlightText(e.text, thanksSearchQuery)}</div>
+    </div>`;
+}
+
+function renderThanks() {
+    if (!currentUser) return;
+    renderThanksCategoryFilterRow();
+
+    const filtered = thanksEntries.filter(e => matchesThanksSearch(e) && matchesThanksCategoryFilter(e));
+    const container = document.getElementById('thanksEntriesContainer');
+    if (container) {
+        if (!filtered.length) {
+            const msg = thanksSearchQuery ? `找不到包含「${thanksSearchQuery}」的紀錄` : '尚無感謝紀錄';
+            container.innerHTML = `<div style="text-align:center; padding: 3rem; color: #A8A89A;">${msg}</div>`;
+        } else {
+            container.innerHTML = filtered.map(e => thanksEntryCardHtml(e)).join('');
+        }
+    }
+    updateThanksStats();
+    if (thanksView === 'calendar') renderThanksCalendar();
+}
+
+function updateThanksStats() {
+    const totalEl = document.getElementById('thanksStatTotal');
+    if (!totalEl) return;
+    totalEl.textContent = thanksEntries.length;
+
+    const days = new Set(thanksEntries.map(e => (e.createdAt?.toDate?.() || new Date()).toDateString()));
+    document.getElementById('thanksStatStreak').textContent = days.size;
+
+    const now = new Date();
+    const monthCount = thanksEntries.filter(e => {
+        const d = e.createdAt?.toDate?.() || new Date();
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    }).length;
+    document.getElementById('thanksStatMonth').textContent = monthCount;
+}
+
+// ── Calendar View ──
+window.changeThanksMonth = (delta) => {
+    thanksCalMonth += delta;
+    if (thanksCalMonth < 0) { thanksCalMonth = 11; thanksCalYear--; }
+    if (thanksCalMonth > 11) { thanksCalMonth = 0; thanksCalYear++; }
+    thanksSelectedDate = null;
+    renderThanksCalendar();
+};
+
+function renderThanksCalendar() {
+    const label = document.getElementById('thanksCalendarMonthLabel');
+    if (!label) return;
+    label.textContent = `${thanksCalYear} 年 ${thanksCalMonth + 1} 月`;
+
+    const map = {};
+    thanksEntries.forEach(e => {
+        if (!matchesThanksSearch(e) || !matchesThanksCategoryFilter(e)) return;
+        const d = e.createdAt?.toDate?.() || new Date();
+        const key = dateKey(d);
+        if (!map[key]) map[key] = [];
+        map[key].push(e);
+    });
+
+    const firstDayWeekday = new Date(thanksCalYear, thanksCalMonth, 1).getDay();
+    const daysInMonth = new Date(thanksCalYear, thanksCalMonth + 1, 0).getDate();
+    const todayKey = dateKey(new Date());
+    const monthPrefix = `${thanksCalYear}-${String(thanksCalMonth + 1).padStart(2, '0')}`;
+
+    let html = ['日', '一', '二', '三', '四', '五', '六'].map(w => `<div class="cal-weekday">${w}</div>`).join('');
+    for (let i = 0; i < firstDayWeekday; i++) html += `<div class="cal-day empty"></div>`;
+
+    let recordedDays = 0;
+    for (let d = 1; d <= daysInMonth; d++) {
+        const key = `${monthPrefix}-${String(d).padStart(2, '0')}`;
+        const hasEntry = !!map[key];
+        if (hasEntry) recordedDays++;
+        let cls = 'cal-day';
+        if (hasEntry) cls += ' has-entry';
+        if (key === todayKey) cls += ' today';
+        if (key === thanksSelectedDate) cls += ' selected';
+        html += `<div class="${cls}" onclick="selectThanksCalDay('${key}')">
+            <span>${d}</span>
+            ${hasEntry ? `<span class="cal-day-dot"></span>` : ''}
+        </div>`;
+    }
+
+    document.getElementById('thanksCalendarGrid').innerHTML = html;
+    const summaryText = (thanksSearchQuery || currentThanksCategoryFilter !== 'all')
+        ? `符合條件：本月 ${recordedDays} 天`
+        : `本月已記錄 ${recordedDays} / ${daysInMonth} 天`;
+    document.getElementById('thanksCalendarSummary').textContent = summaryText;
+    renderThanksSelectedDayEntries(map);
+}
+
+window.selectThanksCalDay = (key) => {
+    thanksSelectedDate = (thanksSelectedDate === key) ? null : key;
+    renderThanksCalendar();
+};
+
+function renderThanksSelectedDayEntries(map) {
+    const container = document.getElementById('thanksCalendarDayEntries');
+    if (!thanksSelectedDate) {
+        container.innerHTML = `<div class="day-entries-empty">點選左側日期，查看當天的感謝紀錄 🙏</div>`;
+        return;
+    }
+    const [y, m, d] = thanksSelectedDate.split('-');
+    const entries = map[thanksSelectedDate] || [];
+    if (!entries.length) {
+        container.innerHTML = `<div class="day-entries-title">${y}/${m}/${d}</div><div class="day-entries-empty">這天還沒有紀錄</div>`;
+        return;
+    }
+    const list = entries.map(e => thanksEntryCardHtml(e)).join('');
+    container.innerHTML = `<div class="day-entries-title">${y}/${m}/${d} · 共 ${entries.length} 則</div><div class="day-entries-list">${list}</div>`;
 }
 </script>
 </body>
