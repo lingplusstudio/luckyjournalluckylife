@@ -176,11 +176,11 @@
         .toast.show { transform: translateX(-50%) translateY(0); }
 
         /* ── MAIN TABS ── */
-        .main-tabs { display: flex; gap: 4px; padding: 4px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; margin: 0 auto 1.75rem; max-width: 320px; }
-        .main-tab { flex: 1; text-align: center; font-size: 13px; padding: 9px 12px; border-radius: 999px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; transition: all 0.2s; font-family: inherit; }
+        .main-tabs { display: flex; gap: 4px; padding: 4px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; margin: 0 auto 1.75rem; max-width: 320px; flex-wrap: wrap; }
+        .main-tab { flex: 1; text-align: center; font-size: 13px; padding: 9px 12px; border-radius: 999px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; transition: all 0.2s; font-family: inherit; white-space: nowrap; }
         .main-tab.active { background: var(--text-primary); color: var(--bg); }
 
-        /* ── CATEGORIES (用感謝的心向宇宙下訂單) ── */
+        /* ── CATEGORIES (用感謝的心向宇宙下訂單 / 覺醒筆記) ── */
         .category-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1.25rem; }
         .category-chip { font-size: 12px; padding: 5px 16px; border-radius: 20px; border: 1px solid var(--border); background: transparent; cursor: pointer; color: var(--text-secondary); }
         .category-chip.active { background: var(--text-primary); color: var(--bg); border-color: var(--text-primary); }
@@ -204,13 +204,13 @@
             .stat-num { font-size: 30px; }
 
             /* 列表模式：雙欄排列 entries，讓橫向空間更有效利用 */
-            #entriesContainer, #thanksEntriesContainer, .day-entries-list {
+            #entriesContainer, #thanksEntriesContainer, #awakeningEntriesContainer, .day-entries-list {
                 display: grid;
                 grid-template-columns: repeat(2, 1fr);
                 gap: 12px;
                 align-items: start;
             }
-            #entriesContainer .entry-card, #thanksEntriesContainer .entry-card, .day-entries-list .entry-card { margin-bottom: 0; }
+            #entriesContainer .entry-card, #thanksEntriesContainer .entry-card, #awakeningEntriesContainer .entry-card, .day-entries-list .entry-card { margin-bottom: 0; }
 
             /* 日曆模式：日曆置左、當日紀錄置右，並排顯示 */
             .calendar-layout { display: grid; grid-template-columns: 380px 1fr; gap: 1.5rem; align-items: start; }
@@ -243,6 +243,7 @@
         <div class="main-tabs">
             <button class="main-tab active" id="tabBtnLucky" onclick="setMainTab('lucky', this)">✦ 幸運日記</button>
             <button class="main-tab" id="tabBtnThanks" onclick="setMainTab('thanks', this)">🙏 用感謝的心向宇宙下訂單</button>
+            <button class="main-tab" id="tabBtnAwakening" onclick="setMainTab('awakening', this)">📖 覺醒筆記</button>
         </div>
 
         <div id="luckyPage">
@@ -365,6 +366,61 @@
             </div>
         </div>
         <!-- /#thanksPage -->
+
+        <!-- ══════════════ 覺醒筆記 ══════════════ -->
+        <div id="awakeningPage" style="display:none;">
+            <div class="stats-grid">
+                <div class="stat-card"><span class="stat-num" id="awakeningStatTotal">—</span><span class="stat-lbl">總筆記數</span></div>
+                <div class="stat-card"><span class="stat-num" id="awakeningStatStreak">—</span><span class="stat-lbl">記錄天數</span></div>
+                <div class="stat-card"><span class="stat-num" id="awakeningStatMonth">—</span><span class="stat-lbl">本月筆記</span></div>
+            </div>
+
+            <div class="input-card">
+                <span class="input-label">今天看到了什麼值得記下的重點？</span>
+                <textarea id="awakeningInput" placeholder="寫下這段話帶給你的體悟...（關於潛意識、宇宙法則的重點）" rows="3"></textarea>
+                <div class="thanks-input-footer">
+                    <div class="category-picker" id="awakeningBookPicker"></div>
+                    <div class="thanks-submit-row">
+                        <button class="submit-btn" id="awakeningSubmitBtn" onclick="addAwakeningEntry()">記下來 →</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="awakeningSearchInput" placeholder="搜尋關鍵字..." oninput="setAwakeningSearch(this.value)">
+                <button class="search-clear" id="awakeningSearchClearBtn" onclick="clearAwakeningSearch()">✕</button>
+            </div>
+
+            <div class="view-toggle">
+                <button class="view-btn active" id="awakeningViewBtnList" onclick="setAwakeningView('list', this)">📋 全覽模式</button>
+                <button class="view-btn" id="awakeningViewBtnCalendar" onclick="setAwakeningView('calendar', this)">📅 日曆模式</button>
+            </div>
+
+            <div class="category-row" id="awakeningBookFilterRow"></div>
+
+            <!-- ── 全覽模式 ── -->
+            <div id="awakeningListView">
+                <div id="awakeningEntriesContainer"></div>
+            </div>
+
+            <!-- ── 日曆模式 ── -->
+            <div id="awakeningCalendarView" style="display:none;">
+                <div class="calendar-layout">
+                    <div class="calendar-card">
+                        <div class="calendar-header">
+                            <button class="cal-nav-btn" onclick="changeAwakeningMonth(-1)">‹</button>
+                            <span class="calendar-month-label" id="awakeningCalendarMonthLabel"></span>
+                            <button class="cal-nav-btn" onclick="changeAwakeningMonth(1)">›</button>
+                        </div>
+                        <div class="calendar-summary" id="awakeningCalendarSummary"></div>
+                        <div class="calendar-grid" id="awakeningCalendarGrid"></div>
+                    </div>
+                    <div class="day-entries-section" id="awakeningCalendarDayEntries"></div>
+                </div>
+            </div>
+        </div>
+        <!-- /#awakeningPage -->
     </main>
 </div>
 
@@ -393,6 +449,17 @@
         <div class="category-picker" id="editThanksCategoryPicker" style="margin-bottom: 1rem;"></div>
         <textarea id="editThanksInput" style="border: 1px solid var(--border); padding: 10px; border-radius: 8px; min-height: 150px;"></textarea>
         <button class="submit-btn" style="width: 100%; margin-top: 1rem;" onclick="saveThanksEdit()">儲存變更</button>
+    </div>
+</div>
+
+<!-- Edit Modal (覺醒筆記) -->
+<div class="modal-overlay" id="editAwakeningModal">
+    <div class="modal-content">
+        <span class="modal-close" onclick="closeEditAwakeningModal()">✕</span>
+        <h3 style="margin-bottom: 1rem; font-weight: 400;">編輯這則筆記</h3>
+        <div class="category-picker" id="editAwakeningBookPicker" style="margin-bottom: 1rem;"></div>
+        <textarea id="editAwakeningInput" style="border: 1px solid var(--border); padding: 10px; border-radius: 8px; min-height: 150px;"></textarea>
+        <button class="submit-btn" style="width: 100%; margin-top: 1rem;" onclick="saveAwakeningEdit()">儲存變更</button>
     </div>
 </div>
 
@@ -433,7 +500,7 @@ let calMonth = _now.getMonth(); // 0-indexed
 let selectedDate = null; // 'YYYY-MM-DD'
 let searchQuery = '';
 
-// ── Main tab (幸運日記 / 用感謝的心向宇宙下訂單) ──
+// ── Main tab (幸運日記 / 用感謝的心向宇宙下訂單 / 覺醒筆記) ──
 let currentMainTab = 'lucky';
 
 // ── 用感謝的心向宇宙下訂單 state ──
@@ -448,6 +515,19 @@ let thanksView = 'list';
 let thanksCalYear = _now.getFullYear();
 let thanksCalMonth = _now.getMonth();
 let thanksSelectedDate = null;
+
+// ── 覺醒筆記 state ──
+let awakeningEntries = [];
+let awakeningBooks = []; // 書籍清單，由使用者自行新增，會與 Firestore 同步
+let currentAwakeningBookFilter = 'all';
+let currentAwakeningBook = null; // 新增筆記時選中的書籍
+let editingAwakeningId = null;
+let editAwakeningBook = null;
+let awakeningSearchQuery = '';
+let awakeningView = 'list';
+let awakeningCalYear = _now.getFullYear();
+let awakeningCalMonth = _now.getMonth();
+let awakeningSelectedDate = null;
 
 const CATEGORY_COLORS = ['#C9952A', '#8E7CC3', '#5B9BD5', '#68A67B', '#D97757', '#B15C6B', '#4E8098', '#9C7A46', '#C77DAB', '#7A8C5A'];
 function getCategoryColor(name) {
@@ -464,8 +544,12 @@ onAuthStateChanged(auth, user => {
         document.getElementById('appScreen').style.display = 'block';
         updateAvatar(user);
         listenEntries();
+        renderThanksCategoryUI(); // 先用預設分類畫出畫面，不等 Firestore 回應
         listenThanksCategories();
         listenThanksEntries();
+        renderAwakeningBookUI(); // 先用目前清單（可能是空的）畫出畫面
+        listenAwakeningBooks();
+        listenAwakeningEntries();
     } else {
         document.getElementById('loginScreen').style.display = 'flex';
         document.getElementById('appScreen').style.display = 'none';
@@ -539,7 +623,15 @@ window.setMainTab = (tab, el) => {
     el.classList.add('active');
     document.getElementById('luckyPage').style.display = tab === 'lucky' ? 'block' : 'none';
     document.getElementById('thanksPage').style.display = tab === 'thanks' ? 'block' : 'none';
-    if (tab === 'thanks' && thanksView === 'calendar') renderThanksCalendar();
+    document.getElementById('awakeningPage').style.display = tab === 'awakening' ? 'block' : 'none';
+    if (tab === 'thanks') {
+        renderThanksCategoryUI();
+        if (thanksView === 'calendar') renderThanksCalendar();
+    }
+    if (tab === 'awakening') {
+        renderAwakeningBookUI();
+        if (awakeningView === 'calendar') renderAwakeningCalendar();
+    }
 };
 
 // ── View Toggle ──
@@ -763,6 +855,19 @@ function showToast(m) {
 }
 
 /* ══════════════════════════════════════════════
+   共用：分類 / 標籤選取器 HTML（謝謝日記、覺醒筆記共用）
+   ══════════════════════════════════════════════ */
+function categoryPickerHtml(categoriesList, selectedCat, onClickFnName, addFnName) {
+    const buttons = categoriesList.map(cat => {
+        const active = cat === selectedCat;
+        const color = getCategoryColor(cat);
+        const style = active ? ` style="background:${color};border-color:${color};color:#fff;"` : '';
+        return `<button type="button" class="category-pick-btn${active ? ' active' : ''}"${style} onclick="${onClickFnName}('${cat.replace(/'/g, "\\'")}')">${cat}</button>`;
+    }).join('');
+    return buttons + `<button type="button" class="category-pick-add" onclick="${addFnName}()">+ 新增</button>`;
+}
+
+/* ══════════════════════════════════════════════
    用感謝的心向宇宙下訂單 (Thanks Journal)
    ══════════════════════════════════════════════ */
 
@@ -774,12 +879,18 @@ function listenThanksCategories() {
             thanksCategories = snap.data().list;
         } else {
             // 第一次使用，寫入預設分類
-            setDoc(ref, { list: thanksCategories }, { merge: true });
+            setDoc(ref, { list: thanksCategories }, { merge: true }).catch(err => {
+                console.error('寫入預設分類失敗：', err);
+                showToast('分類無法同步，請檢查 Firestore 權限設定');
+            });
         }
         if (!thanksCategories.includes(currentThanksCategory)) currentThanksCategory = thanksCategories[0];
         if (editingThanksId && !thanksCategories.includes(editThanksCategory)) editThanksCategory = thanksCategories[0];
         renderThanksCategoryUI();
         renderThanks();
+    }, err => {
+        console.error('讀取分類失敗：', err);
+        showToast('無法讀取分類，請檢查 Firestore 權限設定');
     });
 }
 
@@ -793,16 +904,6 @@ window.addThanksCategory = async () => {
     await setDoc(ref, { list: arrayUnion(trimmed) }, { merge: true });
     showToast(`已新增分類「${trimmed}」`);
 };
-
-function categoryPickerHtml(selectedCat, onClickFnName) {
-    const buttons = thanksCategories.map(cat => {
-        const active = cat === selectedCat;
-        const color = getCategoryColor(cat);
-        const style = active ? ` style="background:${color};border-color:${color};color:#fff;"` : '';
-        return `<button type="button" class="category-pick-btn${active ? ' active' : ''}"${style} onclick="${onClickFnName}('${cat.replace(/'/g, "\\'")}')">${cat}</button>`;
-    }).join('');
-    return buttons + `<button type="button" class="category-pick-add" onclick="addThanksCategory()">+ 新增</button>`;
-}
 
 function renderThanksCategoryUI() {
     renderThanksCategoryFilterRow();
@@ -822,12 +923,12 @@ function renderThanksCategoryFilterRow() {
 
 function renderThanksCategoryPicker() {
     const el = document.getElementById('thanksCategoryPicker');
-    if (el) el.innerHTML = categoryPickerHtml(currentThanksCategory, 'selectThanksCategory');
+    if (el) el.innerHTML = categoryPickerHtml(thanksCategories, currentThanksCategory, 'selectThanksCategory', 'addThanksCategory');
 }
 
 function renderEditThanksCategoryPicker() {
     const el = document.getElementById('editThanksCategoryPicker');
-    if (el) el.innerHTML = categoryPickerHtml(editThanksCategory, 'selectEditThanksCategory');
+    if (el) el.innerHTML = categoryPickerHtml(thanksCategories, editThanksCategory, 'selectEditThanksCategory', 'addThanksCategory');
 }
 
 window.selectThanksCategory = (cat) => {
@@ -853,6 +954,9 @@ function listenThanksEntries() {
     onSnapshot(q, snap => {
         thanksEntries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         renderThanks();
+    }, err => {
+        console.error('讀取謝謝日記失敗：', err);
+        showToast('無法讀取謝謝日記，請檢查 Firestore 權限設定');
     });
 }
 
@@ -1054,6 +1158,305 @@ function renderThanksSelectedDayEntries(map) {
         return;
     }
     const list = entries.map(e => thanksEntryCardHtml(e)).join('');
+    container.innerHTML = `<div class="day-entries-title">${y}/${m}/${d} · 共 ${entries.length} 則</div><div class="day-entries-list">${list}</div>`;
+}
+
+/* ══════════════════════════════════════════════
+   覺醒筆記 (Awakening Notes) — 以書籍為第一層分類
+   ══════════════════════════════════════════════ */
+
+// ── 書籍清單：與 Firestore 同步 ──
+function listenAwakeningBooks() {
+    const ref = doc(db, 'users', currentUser.uid, 'meta', 'awakeningBooks');
+    onSnapshot(ref, snap => {
+        if (snap.exists() && Array.isArray(snap.data().list)) {
+            awakeningBooks = snap.data().list;
+        } else {
+            // 第一次使用，建立空清單文件
+            setDoc(ref, { list: [] }, { merge: true }).catch(err => {
+                console.error('建立書籍清單失敗：', err);
+                showToast('書籍清單無法同步，請檢查 Firestore 權限設定');
+            });
+        }
+        if (currentAwakeningBook && !awakeningBooks.includes(currentAwakeningBook)) {
+            currentAwakeningBook = awakeningBooks[0] || null;
+        }
+        if (!currentAwakeningBook && awakeningBooks.length) currentAwakeningBook = awakeningBooks[0];
+        if (editingAwakeningId && !awakeningBooks.includes(editAwakeningBook)) editAwakeningBook = awakeningBooks[0] || null;
+        renderAwakeningBookUI();
+        renderAwakening();
+    }, err => {
+        console.error('讀取書籍清單失敗：', err);
+        showToast('無法讀取書籍清單，請檢查 Firestore 權限設定');
+    });
+}
+
+window.addAwakeningBook = async () => {
+    const name = prompt('新增書籍名稱：');
+    if (name === null) return;
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    if (awakeningBooks.includes(trimmed)) return showToast('這本書已經加過囉');
+    const ref = doc(db, 'users', currentUser.uid, 'meta', 'awakeningBooks');
+    await setDoc(ref, { list: arrayUnion(trimmed) }, { merge: true });
+    showToast(`已新增書籍「${trimmed}」`);
+};
+
+function renderAwakeningBookUI() {
+    renderAwakeningBookFilterRow();
+    renderAwakeningBookPicker();
+}
+
+function renderAwakeningBookFilterRow() {
+    const row = document.getElementById('awakeningBookFilterRow');
+    if (!row) return;
+    let html = `<button class="category-chip${currentAwakeningBookFilter === 'all' ? ' active' : ''}" onclick="setAwakeningBookFilter('all', this)">全部</button>`;
+    html += awakeningBooks.map(book =>
+        `<button class="category-chip${currentAwakeningBookFilter === book ? ' active' : ''}" onclick="setAwakeningBookFilter('${book.replace(/'/g, "\\'")}', this)">${book}</button>`
+    ).join('');
+    html += `<button class="category-chip-add" onclick="addAwakeningBook()">+ 新增書籍</button>`;
+    row.innerHTML = html;
+}
+
+function renderAwakeningBookPicker() {
+    const el = document.getElementById('awakeningBookPicker');
+    if (el) el.innerHTML = categoryPickerHtml(awakeningBooks, currentAwakeningBook, 'selectAwakeningBook', 'addAwakeningBook');
+}
+
+function renderEditAwakeningBookPicker() {
+    const el = document.getElementById('editAwakeningBookPicker');
+    if (el) el.innerHTML = categoryPickerHtml(awakeningBooks, editAwakeningBook, 'selectEditAwakeningBook', 'addAwakeningBook');
+}
+
+window.selectAwakeningBook = (book) => {
+    currentAwakeningBook = book;
+    renderAwakeningBookPicker();
+};
+
+window.selectEditAwakeningBook = (book) => {
+    editAwakeningBook = book;
+    renderEditAwakeningBookPicker();
+};
+
+window.setAwakeningBookFilter = (book, el) => {
+    currentAwakeningBookFilter = book;
+    document.querySelectorAll('#awakeningBookFilterRow .category-chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    renderAwakening();
+};
+
+// ── CRUD（存在 Firestore：users/{uid}/awakeningEntries）──
+function listenAwakeningEntries() {
+    const q = query(collection(db, 'users', currentUser.uid, 'awakeningEntries'), orderBy('createdAt', 'desc'));
+    onSnapshot(q, snap => {
+        awakeningEntries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderAwakening();
+    }, err => {
+        console.error('讀取覺醒筆記失敗：', err);
+        showToast('無法讀取覺醒筆記，請檢查 Firestore 權限設定');
+    });
+}
+
+window.addAwakeningEntry = async () => {
+    const text = document.getElementById('awakeningInput').value.trim();
+    if (!text) return showToast('寫點什麼吧 ✨');
+    if (!currentAwakeningBook) return showToast('請先新增並選擇一本書籍');
+    await addDoc(collection(db, 'users', currentUser.uid, 'awakeningEntries'), {
+        text, book: currentAwakeningBook, createdAt: serverTimestamp()
+    });
+    document.getElementById('awakeningInput').value = '';
+    showToast('已記下這則筆記 📖');
+};
+
+window.deleteAwakeningEntry = async (e, id) => {
+    e.stopPropagation();
+    if (confirm('確定要刪除嗎？')) await deleteDoc(doc(db, 'users', currentUser.uid, 'awakeningEntries', id));
+};
+
+window.openEditAwakeningModal = (id) => {
+    const entry = awakeningEntries.find(e => e.id === id);
+    if (!entry) return;
+    editingAwakeningId = id;
+    editAwakeningBook = entry.book || awakeningBooks[0] || null;
+    document.getElementById('editAwakeningInput').value = entry.text;
+    renderEditAwakeningBookPicker();
+    document.getElementById('editAwakeningModal').style.display = 'flex';
+};
+
+window.closeEditAwakeningModal = () => {
+    document.getElementById('editAwakeningModal').style.display = 'none';
+    editingAwakeningId = null;
+};
+
+window.saveAwakeningEdit = async () => {
+    const newText = document.getElementById('editAwakeningInput').value.trim();
+    if (!newText) return;
+    await updateDoc(doc(db, 'users', currentUser.uid, 'awakeningEntries', editingAwakeningId), {
+        text: newText,
+        book: editAwakeningBook
+    });
+    closeEditAwakeningModal();
+    showToast('更新成功 📖');
+};
+
+// ── View Toggle（列表 / 日曆）──
+window.setAwakeningView = (v, el) => {
+    awakeningView = v;
+    document.querySelectorAll('#awakeningPage .view-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('awakeningListView').style.display = v === 'list' ? 'block' : 'none';
+    document.getElementById('awakeningCalendarView').style.display = v === 'calendar' ? 'block' : 'none';
+    if (v === 'calendar') renderAwakeningCalendar();
+};
+
+// ── Search ──
+window.setAwakeningSearch = (v) => {
+    awakeningSearchQuery = v.trim();
+    document.getElementById('awakeningSearchClearBtn').style.display = awakeningSearchQuery ? 'flex' : 'none';
+    renderAwakening();
+};
+
+window.clearAwakeningSearch = () => {
+    awakeningSearchQuery = '';
+    document.getElementById('awakeningSearchInput').value = '';
+    document.getElementById('awakeningSearchClearBtn').style.display = 'none';
+    renderAwakening();
+};
+
+function matchesAwakeningSearch(e) {
+    if (!awakeningSearchQuery) return true;
+    return (e.text || '').toLowerCase().includes(awakeningSearchQuery.toLowerCase());
+}
+
+function matchesAwakeningBookFilter(e) {
+    if (currentAwakeningBookFilter === 'all') return true;
+    return e.book === currentAwakeningBookFilter;
+}
+
+// ── Render (List) ──
+function awakeningEntryCardHtml(e) {
+    const d = e.createdAt?.toDate?.() || new Date();
+    const dateStr = `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
+    const color = getCategoryColor(e.book || '');
+    return `
+    <div class="entry-card" onclick="openEditAwakeningModal('${e.id}')">
+        <button class="entry-delete" onclick="deleteAwakeningEntry(event, '${e.id}')">✕</button>
+        <div class="entry-header">
+            <span class="entry-date">${dateStr}</span>
+            <span class="cat-badge" style="background:${color};">${e.book || ''}</span>
+        </div>
+        <div class="entry-text">${highlightText(e.text, awakeningSearchQuery)}</div>
+    </div>`;
+}
+
+function renderAwakening() {
+    if (!currentUser) return;
+    renderAwakeningBookFilterRow();
+
+    const filtered = awakeningEntries.filter(e => matchesAwakeningSearch(e) && matchesAwakeningBookFilter(e));
+    const container = document.getElementById('awakeningEntriesContainer');
+    if (container) {
+        if (!awakeningBooks.length) {
+            container.innerHTML = `<div style="text-align:center; padding: 3rem; color: #A8A89A;">先在上面新增一本書，就可以開始記筆記囉 📖</div>`;
+        } else if (!filtered.length) {
+            const msg = awakeningSearchQuery ? `找不到包含「${awakeningSearchQuery}」的紀錄` : '尚無筆記';
+            container.innerHTML = `<div style="text-align:center; padding: 3rem; color: #A8A89A;">${msg}</div>`;
+        } else {
+            container.innerHTML = filtered.map(e => awakeningEntryCardHtml(e)).join('');
+        }
+    }
+    updateAwakeningStats();
+    if (awakeningView === 'calendar') renderAwakeningCalendar();
+}
+
+function updateAwakeningStats() {
+    const totalEl = document.getElementById('awakeningStatTotal');
+    if (!totalEl) return;
+    totalEl.textContent = awakeningEntries.length;
+
+    const days = new Set(awakeningEntries.map(e => (e.createdAt?.toDate?.() || new Date()).toDateString()));
+    document.getElementById('awakeningStatStreak').textContent = days.size;
+
+    const now = new Date();
+    const monthCount = awakeningEntries.filter(e => {
+        const d = e.createdAt?.toDate?.() || new Date();
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    }).length;
+    document.getElementById('awakeningStatMonth').textContent = monthCount;
+}
+
+// ── Calendar View ──
+window.changeAwakeningMonth = (delta) => {
+    awakeningCalMonth += delta;
+    if (awakeningCalMonth < 0) { awakeningCalMonth = 11; awakeningCalYear--; }
+    if (awakeningCalMonth > 11) { awakeningCalMonth = 0; awakeningCalYear++; }
+    awakeningSelectedDate = null;
+    renderAwakeningCalendar();
+};
+
+function renderAwakeningCalendar() {
+    const label = document.getElementById('awakeningCalendarMonthLabel');
+    if (!label) return;
+    label.textContent = `${awakeningCalYear} 年 ${awakeningCalMonth + 1} 月`;
+
+    const map = {};
+    awakeningEntries.forEach(e => {
+        if (!matchesAwakeningSearch(e) || !matchesAwakeningBookFilter(e)) return;
+        const d = e.createdAt?.toDate?.() || new Date();
+        const key = dateKey(d);
+        if (!map[key]) map[key] = [];
+        map[key].push(e);
+    });
+
+    const firstDayWeekday = new Date(awakeningCalYear, awakeningCalMonth, 1).getDay();
+    const daysInMonth = new Date(awakeningCalYear, awakeningCalMonth + 1, 0).getDate();
+    const todayKey = dateKey(new Date());
+    const monthPrefix = `${awakeningCalYear}-${String(awakeningCalMonth + 1).padStart(2, '0')}`;
+
+    let html = ['日', '一', '二', '三', '四', '五', '六'].map(w => `<div class="cal-weekday">${w}</div>`).join('');
+    for (let i = 0; i < firstDayWeekday; i++) html += `<div class="cal-day empty"></div>`;
+
+    let recordedDays = 0;
+    for (let d = 1; d <= daysInMonth; d++) {
+        const key = `${monthPrefix}-${String(d).padStart(2, '0')}`;
+        const hasEntry = !!map[key];
+        if (hasEntry) recordedDays++;
+        let cls = 'cal-day';
+        if (hasEntry) cls += ' has-entry';
+        if (key === todayKey) cls += ' today';
+        if (key === awakeningSelectedDate) cls += ' selected';
+        html += `<div class="${cls}" onclick="selectAwakeningCalDay('${key}')">
+            <span>${d}</span>
+            ${hasEntry ? `<span class="cal-day-dot"></span>` : ''}
+        </div>`;
+    }
+
+    document.getElementById('awakeningCalendarGrid').innerHTML = html;
+    const summaryText = (awakeningSearchQuery || currentAwakeningBookFilter !== 'all')
+        ? `符合條件：本月 ${recordedDays} 天`
+        : `本月已記錄 ${recordedDays} / ${daysInMonth} 天`;
+    document.getElementById('awakeningCalendarSummary').textContent = summaryText;
+    renderAwakeningSelectedDayEntries(map);
+}
+
+window.selectAwakeningCalDay = (key) => {
+    awakeningSelectedDate = (awakeningSelectedDate === key) ? null : key;
+    renderAwakeningCalendar();
+};
+
+function renderAwakeningSelectedDayEntries(map) {
+    const container = document.getElementById('awakeningCalendarDayEntries');
+    if (!awakeningSelectedDate) {
+        container.innerHTML = `<div class="day-entries-empty">點選左側日期，查看當天的筆記 📖</div>`;
+        return;
+    }
+    const [y, m, d] = awakeningSelectedDate.split('-');
+    const entries = map[awakeningSelectedDate] || [];
+    if (!entries.length) {
+        container.innerHTML = `<div class="day-entries-title">${y}/${m}/${d}</div><div class="day-entries-empty">這天還沒有筆記</div>`;
+        return;
+    }
+    const list = entries.map(e => awakeningEntryCardHtml(e)).join('');
     container.innerHTML = `<div class="day-entries-title">${y}/${m}/${d} · 共 ${entries.length} 則</div><div class="day-entries-list">${list}</div>`;
 }
 </script>
